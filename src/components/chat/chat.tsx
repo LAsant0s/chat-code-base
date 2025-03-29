@@ -1,11 +1,21 @@
-import { CornerDownLeft, Paperclip } from "lucide-react";
+import {
+  CornerDownLeft,
+  Paperclip
+} from "lucide-react";
 import { Button } from "../ui/button";
-import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage } from "../ui/chat/chat-bubble";
+import {
+  ChatBubble,
+  ChatBubbleAvatar,
+  ChatBubbleMessage,
+} from "../ui/chat/chat-bubble";
 import { ChatInput } from "../ui/chat/chat-input";
 import { ChatMessageList } from "../ui/chat/chat-message-list";
 import { useState, useRef, useEffect } from "react";
 import { chatService } from "@/services/api";
 import { Bounce, toast } from "react-toastify";
+import farmer from "@/images/farmer.png";
+import { SingleSelectButtons } from "../ui/single-select-buttons";
+
 export interface ChatMessage {
   id: string;
   content: string;
@@ -18,6 +28,7 @@ export function Chat() {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedMode, setSelectedMode] = useState("simple");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -29,12 +40,14 @@ export function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
-      toast.error('Apenas arquivos PDF são permitidos.', {
+    if (file.type !== "application/pdf") {
+      toast.error("Apenas arquivos PDF são permitidos.", {
         position: "top-left",
         autoClose: 5000,
         hideProgressBar: false,
@@ -43,7 +56,7 @@ export function Chat() {
         draggable: true,
         progress: undefined,
         theme: "colored",
-        transition: Bounce
+        transition: Bounce,
       });
       return;
     }
@@ -56,12 +69,12 @@ export function Chat() {
         id: Date.now().toString(),
         content: `Arquivo PDF enviado: ${file.name}`,
         role: "user",
-        fileUrl: response.url
+        fileUrl: response.url,
       };
 
-      setMessages(prev => [...prev, newMessage]);
+      setMessages((prev) => [...prev, newMessage]);
     } catch {
-      toast.error('Erro ao enviar arquivo PDF. Tente novamente.', {
+      toast.error("Erro ao enviar arquivo PDF. Tente novamente.", {
         position: "top-left",
         autoClose: 5000,
         hideProgressBar: false,
@@ -70,12 +83,12 @@ export function Chat() {
         draggable: true,
         progress: undefined,
         theme: "colored",
-        transition: Bounce
+        transition: Bounce,
       });
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -89,7 +102,7 @@ export function Chat() {
       role: "user"
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
     setMessage("");
 
     try {
@@ -102,14 +115,14 @@ export function Chat() {
         role: "assistant"
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         content: "Desculpe, ocorreu um erro ao processar sua mensagem.",
         role: "assistant"
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -121,16 +134,22 @@ export function Chat() {
         <div className="flex-1 overflow-y-auto w-full">
           <ChatMessageList>
             {messages.map((msg) => (
-              <ChatBubble key={msg.id} variant={msg.role === "user" ? "sent" : "received"}>
-                <ChatBubbleAvatar fallback={msg.role === "user" ? "US" : "AI"} />
-                <ChatBubbleMessage 
+              <ChatBubble
+                key={msg.id}
+                variant={msg.role === "user" ? "sent" : "received"}
+              >
+                <ChatBubbleAvatar
+                  src={msg.role === "user" ? "" : farmer}
+                  fallback={msg.role === "user" ? "LS" : "AI"}
+                />
+                <ChatBubbleMessage
                   variant={msg.role === "user" ? "sent" : "received"}
                 >
                   {msg.content}
                   {msg.fileUrl && (
-                    <a 
-                      href={msg.fileUrl} 
-                      target="_blank" 
+                    <a
+                      href={msg.fileUrl}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="block mt-2 text-sm text-primary hover:underline"
                     >
@@ -142,7 +161,7 @@ export function Chat() {
             ))}
             {isLoading && (
               <ChatBubble variant="received">
-                <ChatBubbleAvatar fallback="AI" />
+                <ChatBubbleAvatar src={farmer} fallback="AI" />
                 <ChatBubbleMessage variant="received" isLoading />
               </ChatBubble>
             )}
@@ -150,7 +169,7 @@ export function Chat() {
           </ChatMessageList>
         </div>
 
-        <form 
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSendMessage();
@@ -163,7 +182,7 @@ export function Chat() {
             placeholder="Digite sua mensagem aqui..."
             className="min-h-12 resize-none rounded-lg bg-background border-0 p-3 shadow-none focus-visible:ring-0"
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 handleSendMessage();
               }
             }}
@@ -176,9 +195,9 @@ export function Chat() {
               accept=".pdf"
               className="hidden"
             />
-            <Button 
+            <Button
               type="button"
-              variant="ghost" 
+              variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading || isUploading}
@@ -187,9 +206,9 @@ export function Chat() {
               <span className="sr-only">Anexar arquivo</span>
             </Button>
 
-            <Button 
+            <Button
               type="submit"
-              size="sm" 
+              size="sm"
               className="ml-auto gap-1.5"
               disabled={!message.trim() || isLoading}
             >
@@ -198,6 +217,18 @@ export function Chat() {
             </Button>
           </div>
         </form>
+      </div>
+
+      <div className="mt-4">
+        <SingleSelectButtons
+          options={[
+            { value: "simple", label: "Abordagem simples" },
+            { value: "technical", label: "Abordagem técnica" }
+          ]}
+          value={selectedMode}
+          onChange={setSelectedMode}
+          className="w-[300px] mb-6"
+        />
       </div>
     </div>
   );

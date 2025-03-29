@@ -1,10 +1,11 @@
-import Chat from "./components/chat/chat";
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
 import { ToastContainer } from 'react-toastify';
 
 export function App() {
   return (
     <>
-      <Chat />
+      <RouterProvider router={router} />
       <ToastContainer />
     </>
   );
