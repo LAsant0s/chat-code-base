@@ -5,17 +5,20 @@ import { ChatInput } from "../ui/chat/chat-input";
 import { ChatMessageList } from "../ui/chat/chat-message-list";
 import { useState, useRef, useEffect } from "react";
 import { chatService } from "@/services/api";
-
+import { Bounce, toast } from "react-toastify";
 export interface ChatMessage {
   id: string;
   content: string;
   role: "user" | "assistant";
+  fileUrl?: string;
 }
 
 export function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -25,6 +28,57 @@ export function Chat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast.error('Apenas arquivos PDF são permitidos.', {
+        position: "top-left",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const response = await chatService.uploadPdf(file);
+
+      const newMessage: ChatMessage = {
+        id: Date.now().toString(),
+        content: `Arquivo PDF enviado: ${file.name}`,
+        role: "user",
+        fileUrl: response.url
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+    } catch {
+      toast.error('Erro ao enviar arquivo PDF. Tente novamente.', {
+        position: "top-left",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce
+      });
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
@@ -73,6 +127,16 @@ export function Chat() {
                   variant={msg.role === "user" ? "sent" : "received"}
                 >
                   {msg.content}
+                  {msg.fileUrl && (
+                    <a 
+                      href={msg.fileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block mt-2 text-sm text-primary hover:underline"
+                    >
+                      Abrir PDF
+                    </a>
+                  )}
                 </ChatBubbleMessage>
               </ChatBubble>
             ))}
@@ -105,7 +169,20 @@ export function Chat() {
             }}
           />
           <div className="flex items-center p-3 pt-0">
-            <Button variant="ghost" size="icon">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".pdf"
+              className="hidden"
+            />
+            <Button 
+              type="button"
+              variant="ghost" 
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || isUploading}
+            >
               <Paperclip className="size-4" />
               <span className="sr-only">Anexar arquivo</span>
             </Button>
@@ -114,7 +191,7 @@ export function Chat() {
               type="submit"
               size="sm" 
               className="ml-auto gap-1.5"
-              disabled={!message.trim()}
+              disabled={!message.trim() || isLoading}
             >
               Enviar mensagem
               <CornerDownLeft className="size-3.5" />
