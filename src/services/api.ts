@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { delay, fileToBuffer } from '@/utils/functions';
+import { fileToBuffer } from '@/utils/functions';
 
 class ApiService {
   private api: AxiosInstance;
@@ -34,7 +34,6 @@ class ApiService {
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
-      await delay(2000);
       const response: AxiosResponse<T> = await this.api.post(url, data, config);
       return response.data;
     } catch (error) {
@@ -73,10 +72,11 @@ class ApiService {
   }
 }
 
-export const api = new ApiService('http://localhost:3000');
+export const api = new ApiService('https://run.mocky.io/v3/20cfcdca-6b56-435a-9c30-5f42b7fb92ca');
 
 export interface ChatResponse {
   message: string;
+  user: string;
 }
 
 export interface FileUploadResponse {

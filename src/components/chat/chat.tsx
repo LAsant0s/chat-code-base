@@ -98,7 +98,7 @@ export function Chat() {
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: response.message,
+        content: response.user,
         role: "assistant"
       };
 
